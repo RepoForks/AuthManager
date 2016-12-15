@@ -2,11 +2,16 @@ package com.github.pavlospt.signindemo
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.design.widget.CoordinatorLayout
+import android.support.design.widget.Snackbar
 import android.support.design.widget.TextInputLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.Toast
 import com.github.charbgr.authmanager.AuthManager
 import com.github.charbgr.authmanager.models.SuccessPayload
@@ -42,6 +47,7 @@ class SignInActivity : AppCompatActivity(),
     private lateinit var saveCredentialsButton: Button
     private lateinit var emailAddressTextInput: TextInputLayout
     private lateinit var passwordTextInput: TextInputLayout
+    private lateinit var rootView: CoordinatorLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +59,7 @@ class SignInActivity : AppCompatActivity(),
     }
 
     private fun initViews() {
+        rootView = findViewById(R.id.activity_sign_in) as CoordinatorLayout
         saveCredentialsButton = findViewById(R.id.save_credentials_button) as Button
         requestUserCredentials = findViewById(R.id.request_user_credentials_button) as Button
         requestHintsButton = findViewById(R.id.request_hints_button) as Button
@@ -287,10 +294,18 @@ class SignInActivity : AppCompatActivity(),
 
     override fun signInSuccess(signInSuccess: SuccessPayload) {
         if (signInSuccess.hasCredential()) {
-            showCredentialDialog(signInSuccess.credential)
+            showCredentialSnackbar(signInSuccess.credential)
         } else if (signInSuccess.hasGoogleSignInAccount()) {
             MainActivity.startActivity(this, signInSuccess.googleSignInAccount.email)
         }
+    }
+
+    private fun showCredentialSnackbar(credential: Credential?) {
+        CredentialsSnackBar.make(rootView,
+            Snackbar.LENGTH_INDEFINITE,
+            { MainActivity.startActivity(this@SignInActivity, credential?.id) },
+            { authManager?.deleteCredential(credential) }
+        ).show()
     }
 
     private fun showCredentialDialog(credential: Credential?) {
